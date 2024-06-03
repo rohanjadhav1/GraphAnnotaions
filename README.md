@@ -12,4 +12,6 @@ This projects used below packages -
 
 -   htmlwidgets
 
-Make sure that you all packages installed on your system before running this application.
+Make sure that you have all packages installed on your system before running this application.
+
+Please note that currently **Upload Image** is not working.

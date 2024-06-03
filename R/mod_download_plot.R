@@ -28,7 +28,7 @@ mod_download_plot_server <- function(id, rv){
       )
     })
     
-    output$download_plot_object <- renderPlotly({
+    plot <- reactive({
       if (!is.null(rv$anntn_plot)) {
         rv$anntn_plot
       } else {
@@ -36,17 +36,16 @@ mod_download_plot_server <- function(id, rv){
       }
     })
     
+    output$download_plot_object <- renderPlotly({
+      plot()
+    })
+    
     output$down_plot <- downloadHandler(
       filename = function() {
         paste("plot-", Sys.Date(), ".html", sep = "")
       },
       content = function(file) {
-        plot <- if (!is.null(rv$anntn_plot)) {
-          rv$anntn_plot
-        } else {
-          rv$plot
-        }
-        htmlwidgets::saveWidget(widget = plot, 
+        htmlwidgets::saveWidget(widget = plot(), 
                                 file = file)
       }
     )

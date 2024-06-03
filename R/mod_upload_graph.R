@@ -25,7 +25,7 @@ mod_upload_graph_server <- function(id, rv){
         sidebarLayout(
           sidebarPanel(width = 3,
             shiny::fileInput(inputId = "input_plot",
-                             label = "Upload Image", 
+                             label = "Upload Image(yet to work)", 
                              accept = c(".jpeg", ".png", ".pdf")),
             selectInput(inputId = ns("select_plot"),
                         label = "Select Plot",

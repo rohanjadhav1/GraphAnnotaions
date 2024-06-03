@@ -11,7 +11,16 @@ app_ui <- function(request) {
     # Your application UI logic
     # List the first level UI elements here.
     shinydashboard::dashboardPage(
-      shinydashboard::dashboardHeader(title = "Graph Annotations"),
+      shinydashboard::dashboardHeader(title = "Graph Annotations",
+                                      tags$li(
+                                        class = "dropdown",
+                                        a(href = "https://www.linkedin.com/in/rohan-jadhav-924642103/",
+                                          icon('linkedin'))),
+                                      tags$li(
+                                        class = "dropdown",
+                                        a(href = "https://github.com/rohanjadhav1/GraphAnnotations",
+                                          icon('github')))
+                                      ),
       shinydashboard::dashboardSidebar(width = 0),
       shinydashboard::dashboardBody(
         fluidPage(
@@ -32,9 +41,7 @@ app_ui <- function(request) {
                          )
                        )
                      )),
-            mod_download_plot_ui("download_plot_1"),
-            tabPanel(title = span(a(title = 'LinkedIn', href="https://www.linkedin.com/in/rohan-jadhav-924642103/",target="_blank",icon('linkedin')),
-                                  a(title = 'GitHub', href="https://github.com/rohanjadhav1/GraphAnnotations",target="_blank",icon('github'))))
+            mod_download_plot_ui("download_plot_1")
           )
         )
       )
