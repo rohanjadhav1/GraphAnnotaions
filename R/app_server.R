@@ -19,7 +19,7 @@ app_server <- function(input, output, session) {
   
   observeEvent(input$add, {
     current_id <- paste0("id_", input$add)
-    rv$num <- input$add
+    rv$current_id <- current_id
     insertUI(
       selector = "#add",
       where = "beforeBegin",
@@ -29,11 +29,13 @@ app_server <- function(input, output, session) {
     mod_dyn_annotations_server(current_id, rv, annotations)
     
     observeEvent(input[[paste0(current_id, '-deleteButton')]], {
+      annotations_list <- annotations()
+      annotations_list[[current_id]] <- NULL
+      annotations(annotations_list)
       removeUI(selector = paste0("#", current_id))
     })
   })
   
-  # mod_dynamicInputs_server("dynamicInputs_ui_1", annotations)
   mod_plot_server("plot_ui_1", rv, annotations)
   
   # Tab 3

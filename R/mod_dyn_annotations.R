@@ -3,29 +3,35 @@
 #' @description A shiny Module.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
+#' 
+#' @importFrom shiny selectInput column fluidRow NS tagList uiOutput actionButton
+#' @importFrom shinydashboard box
 #'
 #' @noRd 
-#'
-#' @importFrom shiny NS tagList 
 mod_dyn_annotations_ui <- function(id){
   ns <- NS(id)
   shiny::div(
     id = id,
-    shiny::fluidRow(
-      column(width = 8,
-             shiny::selectInput(inputId = ns("anntn_type"),
-                                label = "Annotation Type",
-                                choices = names(annotate_layer_args),
-                                selected = "text"))),
-    shiny::fluidRow(
-      column(width = 8,
-             shiny::selectInput(inputId = ns("select_attr"),
-                                label = "Select Attributes",
-                                choices = NULL,
-                                multiple = TRUE))),
-    shiny::fluidRow(
-      column(width = 12,
-             uiOutput(ns("dynamic_inputs")))
+    shinydashboard::box(
+      shiny::fluidRow(
+        column(width = 8,
+               shiny::selectInput(inputId = ns("anntn_type"),
+                                  label = "Annotation Type",
+                                  choices = names(annotate_layer_args),
+                                  selected = "Text"))),
+      shiny::fluidRow(
+        column(width = 8,
+               shiny::selectInput(inputId = ns("select_attr"),
+                                  label = "Select Attributes",
+                                  choices = NULL,
+                                  multiple = TRUE))),
+      shiny::fluidRow(
+        column(width = 12,
+               uiOutput(ns("dynamic_inputs")))
+      ),
+      collapsible = TRUE,
+      width = "100px",
+      status = "primary"
     ),
     
     shiny::fluidRow(
@@ -41,6 +47,13 @@ mod_dyn_annotations_ui <- function(id){
 }
     
 #' dyn_annotations Server Functions
+#' @param rv a reactive variable
+#' @param annotations list of annotations
+#' 
+#' @importFrom shiny observeEvent updateSelectInput fluidRow observe
+#' @importFrom colourpicker colourInput
+#' 
+#' 
 #'
 #' @noRd 
 mod_dyn_annotations_server <- function(id, rv, annotations){
@@ -48,34 +61,39 @@ mod_dyn_annotations_server <- function(id, rv, annotations){
     ns <- session$ns
     
     # annotations <- reactiveVal(list())
-    num <- rv$num
+    current_id <- rv$current_id
     observeEvent(input$anntn_type, {
       
       updateSelectInput(session = session,
                         'select_attr',
                         choices = names(annotate_layer_args[[input$anntn_type]]),
-                        selected = names(annotate_layer_args[[input$anntn_type]])[1:3])
+                        selected = names(annotate_layer_args[[input$anntn_type]]))
     })
     
     output$dynamic_inputs <- renderUI({
       
       inputs <- lapply(input$select_attr, function(var) {
         switch(var,
-               'x' = numericInput(ns("x"), "X", min = 0, value = NULL),
-               'y' = numericInput(ns("y"), "Y", min = 0, value = NULL),
+               'x' = numericInput(ns("x"), "X", min = 0, value = 0),
+               'y' = numericInput(ns("y"), "Y", min = 0, value = 0),
                'text' = textInput(ns("text"), "Text", value = NULL),
                'parse' = checkboxInput(ns("parse"), "Parse", value = FALSE),
                'linetype' = selectInput(ns("linetype"), "Line Type", 
                                         choices = c("solid", "dashed", "dotted",
-                                                    "dotdash", "longdash"), selected = NULL),
-               'size' = numericInput(ns("size"), "Size", min = 0, value = NULL),
-               'alpha' = numericInput(ns("alpha"), "Alpha", min = 0, max = 1, value = NULL, step = 0.1),
-               'xmin' = numericInput(ns("xmin"), "X-Min", min = 0, value = NULL),
-               'xmax' = numericInput(ns("xmax"), "X-Max", min = 0, value = NULL),
-               'ymin' = numericInput(ns("ymin"), "Y-Min", min = 0, value = NULL),
-               'ymax' = numericInput(ns("ymax"), "Y-Max", min = 0, value = NULL),
-               'xintercept' = numericInput(ns("xintercept"), "X-Intercept", min = 0, value = NULL),
-               'yintercept' = numericInput(ns("yintercept"), "Y-Intercept", min = 0, value = NULL),
+                                                    "dotdash", "longdash"), selected = "solid"),
+               'size' = numericInput(ns("size"), "Size", min = 0, value = 1),
+               'alpha' = numericInput(ns("alpha"), "Alpha", min = 0, max = 1, value = 0.7, step = 0.1),
+               'xmin' = numericInput(ns("xmin"), "X-Min", min = 0, value = 0),
+               'xmax' = numericInput(ns("xmax"), "X-Max", min = 0, value = 0),
+               'ymin' = numericInput(ns("ymin"), "Y-Min", min = 0, value = 0),
+               'ymax' = numericInput(ns("ymax"), "Y-Max", min = 0, value = 0),
+               'xend' = numericInput(ns("xend"), "X-End", min = 0, value = 0),
+               'yend' = numericInput(ns("yend"), "Y-End", min = 0, value = 0),
+               'linewidth' = numericInput(ns("linewidth"), "Line Width", min = 0, value = 1),
+               'xintercept' = numericInput(ns("xintercept"), "X-Intercept", min = 0, value = 0),
+               'yintercept' = numericInput(ns("yintercept"), "Y-Intercept", min = 0, value = 0),
+               'color' = colourpicker::colourInput(ns('color'), "Color", value = "#000000"),
+               'fill' = colourpicker::colourInput(ns('fill'), "Fill", value = "#F0F0F0"),
                NULL)
       })
       # do.call(tagList, inputs)
@@ -92,41 +110,72 @@ mod_dyn_annotations_server <- function(id, rv, annotations){
       )
     })
     
-    annotations_list <- annotations()
-    annotations_list[[num]] <- list(type = NULL,
-                                    x = NULL, 
-                                    y = NULL, 
-                                    text = NULL,
-                                    parse = NULL,
-                                    linetype = NULL,
-                                    size = NULL,
-                                    alpha = NULL,
-                                    xmin = NULL,
-                                    ymin = NULL,
-                                    xmax = NULL,
-                                    ymax = NULL,
-                                    xintercept = NULL,
-                                    yintercept = NULL)
-    annotations(annotations_list)
-    
     observe({
-      
       annotations_list <- annotations()
       
-      annotations_list[[num]] <- list(type = input$anntn_type,
-                                      x = input$x, 
-                                      y = input$y, 
-                                      text = input$text,
-                                      parse = input$parse,
-                                      linetype = input$linetype,
-                                      size = input$size,
-                                      alpha = input$alpha,
-                                      xmin = input$xmin,
-                                      ymin = input$ymin,
-                                      xmax = input$xmax,
-                                      ymax = input$ymax,
-                                      xintercept = input$xintercept,
-                                      yintercept = input$yintercept)
+      if (!is.null(input$anntn_type)) {
+        if (input$anntn_type == "Text") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 x = input$x, 
+                                                 y = input$y, 
+                                                 text = input$text,
+                                                 parse = input$parse,
+                                                 color = input$color,
+                                                 size = input$size,
+                                                 alpha = input$alpha)
+          
+        } else if (input$anntn_type == "Horizontal Line") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 yintercept = input$yintercept,
+                                                 linetype = input$linetype,
+                                                 color = input$color,
+                                                 size = input$size)
+          
+        } else if (input$anntn_type == "Vertical Line") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 yintercept = input$xintercept,
+                                                 linetype = input$linetype,
+                                                 color = input$color,
+                                                 size = input$size)
+          
+        } else if (input$anntn_type == "Rectangle") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 xmin = input$xmin,
+                                                 xmax = input$xmax,
+                                                 ymin = input$ymin,
+                                                 ymax = input$ymax,
+                                                 alpha = input$alpha,
+                                                 color = input$color,
+                                                 fill = input$fill)
+          
+        } else if (input$anntn_type == "Segment") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 x = input$x,
+                                                 y = input$y,
+                                                 xend = input$yend,
+                                                 yend = input$yend,
+                                                 color = input$color,
+                                                 size = input$size,
+                                                 linetype = input$linetype)
+          
+        } else if (input$anntn_type == "Point Range") {
+          annotations_list[[current_id]] <- list(type = input$anntn_type,
+                                                 x = input$x,
+                                                 y = input$y,
+                                                 ymin = input$ymin,
+                                                 ymax = input$ymax,
+                                                 color = input$color,
+                                                 size = input$size,
+                                                 linewidth = input$linewidth,
+                                                 alpha = input$alpha)
+          
+        }
+      } else {
+        annotations_list[[current_id]] <- NULL
+      }
+      
+      annotations_list[[current_id]] <- 
+        annotations_list[[current_id]][!(sapply(annotations_list[[current_id]], is.null))]
       annotations(annotations_list)
     })
   })

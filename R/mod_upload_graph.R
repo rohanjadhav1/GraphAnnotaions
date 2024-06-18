@@ -3,6 +3,7 @@
 #' @description A shiny Module.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
+#' @importFrom shiny uiOutput NS
 #'
 #' @noRd 
 #'
@@ -13,6 +14,8 @@ mod_upload_graph_ui <- function(id){
 }
     
 #' upload_graph Server Functions
+#' 
+#' @importFrom shiny renderUI plotOutput renderPlot
 #'
 #' @noRd 
 mod_upload_graph_server <- function(id, rv){
@@ -35,7 +38,7 @@ mod_upload_graph_server <- function(id, rv){
                         selected = 1)
           ),
           mainPanel(
-            plotlyOutput(ns("plot"))
+            plotOutput(ns("plot"))
           ))
         )
     })
@@ -60,8 +63,8 @@ mod_upload_graph_server <- function(id, rv){
       rv$plot <- plot
     })
     
-    output$plot <- renderPlotly({
-      ggplotly(rv$plot)
+    output$plot <- renderPlot({
+      rv$plot
     })
  
   })
