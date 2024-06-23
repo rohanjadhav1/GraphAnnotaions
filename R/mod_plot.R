@@ -4,7 +4,6 @@
 #' @importFrom shiny plotOutput NS tagList
 #' @noRd 
 #'
-#' @importFrom shiny NS tagList
 mod_plot_ui <- function(id){
   ns <- NS(id)
   div(
@@ -33,11 +32,11 @@ mod_plot_server <- function(id, rv) {
       
       if (length(annots) > 0) {
         p <- display_plot(p, annots)
-        if (rv$plot_type == '1') {
+        if (rv$plot_type == 'scatter_plot') {
           rv$scatter_plot <- p
-        } else if (rv$plot_type == '2') {
+        } else if (rv$plot_type == 'bar_chart') {
           rv$bar_chart <- p
-        } else if (rv$plot_type == '3') {
+        } else if (rv$plot_type == 'box_plot') {
           rv$box_plot <- p
         }
       }

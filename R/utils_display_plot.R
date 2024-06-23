@@ -1,12 +1,11 @@
-#' display_plot 
+#' To display the plot with the certain annotations 
 #'
 #' @description A utils function
 #' 
 #' @importFrom ggplot2 annotate geom_hline geom_vline
 #'
-#' @return The return value, if any, from executing the utility.
-#'
-#' @noRd
+#' @return Return plot with the applied certain annotations
+#' @export
 display_plot <- function(p, annots) {
   for (i in seq_along(annots)) {
     if (!is.null(annots[[i]]$type)) {

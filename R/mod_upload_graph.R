@@ -32,10 +32,10 @@ mod_upload_graph_server <- function(id, rv){
                              accept = c(".jpeg", ".png", ".pdf")),
             selectInput(inputId = ns("select_plot"),
                         label = "Select Plot",
-                        choices = c("Scatter Plot" = 1,
-                                    "Bar Chart" = 2,
-                                    "Box Plot" = 3),
-                        selected = 1)
+                        choices = c("Scatter Plot" = 'scatter_plot',
+                                    "Bar Chart" = 'bar_chart',
+                                    "Box Plot" = 'box_plot'),
+                        selected = 'scatter_plot')
           ),
           mainPanel(
             plotOutput(ns("plot"))
@@ -52,11 +52,11 @@ mod_upload_graph_server <- function(id, rv){
     })
     
     observeEvent(input$select_plot, {
-      if (input$select_plot == 1) {
+      if (input$select_plot == 'scatter_plot') {
         plot <- readRDS("./inst/plots/line_plot.rds")
-      } else if (input$select_plot == 2) {
+      } else if (input$select_plot == 'bar_chart') {
         plot <- readRDS("./inst/plots/bar_chart.rds")
-      } else if (input$select_plot == 3) {
+      } else if (input$select_plot == 'box_plot') {
         plot <- readRDS("./inst/plots/box_plot.rds")
       }
       
