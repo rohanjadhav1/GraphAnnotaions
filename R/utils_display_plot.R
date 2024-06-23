@@ -14,8 +14,7 @@ display_plot <- function(p, annots) {
         p <- p + annotate(geom = "text", x = annots[[i]]$x, 
                           y = annots[[i]]$y, label = annots[[i]]$text, 
                           size = annots[[i]]$size, alpha = annots[[i]]$alpha, 
-                          parse = annots[[i]]$parse, color = annots[[i]]$color,
-                          na.rm = TRUE)
+                          parse = annots[[i]]$parse, color = annots[[i]]$color)
         
       } else if (annots[[i]]$type == "Horizontal Line") {
         p <- p + geom_hline(yintercept = annots[[i]]$yintercept,

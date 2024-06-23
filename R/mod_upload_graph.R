@@ -61,6 +61,7 @@ mod_upload_graph_server <- function(id, rv){
       }
       
       rv$plot <- plot
+      rv$plot_type <- input$select_plot
     })
     
     output$plot <- renderPlot({

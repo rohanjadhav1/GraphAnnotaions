@@ -7,8 +7,11 @@
 #' @importFrom shiny NS tagList
 mod_plot_ui <- function(id){
   ns <- NS(id)
-  tagList(
-    plotOutput(ns("plot"))
+  div(
+    wellPanel(
+      style = "position: fixed; width: 60%;",
+      plotOutput(ns("plot"))
+    )
   )
 }
 
@@ -21,22 +24,24 @@ mod_plot_ui <- function(id){
 #' @importFrom shiny renderPlot
 #' 
 #' @noRd 
-mod_plot_server <- function(id, rv, annotations) {
+mod_plot_server <- function(id, rv) {
   moduleServer(id, function(input, output, session) {
     
-    plot <- reactive({
+    output$plot <- renderPlot({
       p <- rv$plot
-      annots <- annotations()
+      annots <- rv$annotations
+      
       if (length(annots) > 0) {
         p <- display_plot(p, annots)
-        rv$anntn_plot <- p
+        if (rv$plot_type == '1') {
+          rv$scatter_plot <- p
+        } else if (rv$plot_type == '2') {
+          rv$bar_chart <- p
+        } else if (rv$plot_type == '3') {
+          rv$box_plot <- p
+        }
       }
       p
-    })
-    
-    output$plot <- renderPlot({
-      req(plot())
-      plot()
     })
   })
 }

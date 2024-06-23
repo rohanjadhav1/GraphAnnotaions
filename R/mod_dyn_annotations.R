@@ -10,39 +10,41 @@
 #' @noRd 
 mod_dyn_annotations_ui <- function(id){
   ns <- NS(id)
-  shiny::div(
-    id = id,
-    shinydashboard::box(
-      shiny::fluidRow(
-        column(width = 8,
-               shiny::selectInput(inputId = ns("anntn_type"),
-                                  label = "Annotation Type",
-                                  choices = names(annotate_layer_args),
-                                  selected = "Text"))),
-      shiny::fluidRow(
-        column(width = 8,
-               shiny::selectInput(inputId = ns("select_attr"),
-                                  label = "Select Attributes",
-                                  choices = NULL,
-                                  multiple = TRUE))),
-      shiny::fluidRow(
-        column(width = 12,
-               uiOutput(ns("dynamic_inputs")))
+  fluidPage(
+    shiny::div(
+      id = id,
+      shinydashboard::box(
+        shiny::fluidRow(
+          column(width = 8,
+                 shiny::selectInput(inputId = ns("anntn_type"),
+                                    label = "Annotation Type",
+                                    choices = names(annotate_layer_args),
+                                    selected = "Text"))),
+        shiny::fluidRow(
+          column(width = 8,
+                 shiny::selectInput(inputId = ns("select_attr"),
+                                    label = "Select Attributes",
+                                    choices = NULL,
+                                    multiple = TRUE))),
+        shiny::fluidRow(
+          column(width = 12,
+                 uiOutput(ns("dynamic_inputs")))
+        ),
+        collapsible = TRUE,
+        width = "100px",
+        status = "primary"
       ),
-      collapsible = TRUE,
-      width = "100px",
-      status = "primary"
-    ),
-    
-    shiny::fluidRow(
-      shiny::actionButton(
-        ns("deleteButton"),
-        "Delete",
-        icon = icon('trash'),
-        style = 'float: left'
-      )
-    ),
-    br()
+      
+      shiny::fluidRow(
+        shiny::actionButton(
+          ns("deleteButton"),
+          "Delete",
+          icon = icon('trash'),
+          style = 'float: left'
+        )
+      ),
+      br()
+    )
   )
 }
     
@@ -52,18 +54,15 @@ mod_dyn_annotations_ui <- function(id){
 #' 
 #' @importFrom shiny observeEvent updateSelectInput fluidRow observe
 #' @importFrom colourpicker colourInput
-#' 
-#' 
 #'
 #' @noRd 
-mod_dyn_annotations_server <- function(id, rv, annotations){
-  moduleServer( id, function(input, output, session){
+mod_dyn_annotations_server <- function(id, rv) {
+  moduleServer( id, function(input, output, session) {
     ns <- session$ns
     
-    # annotations <- reactiveVal(list())
     current_id <- rv$current_id
     observeEvent(input$anntn_type, {
-      
+      rv$annotations[[current_id]]$type <- input$anntn_type
       updateSelectInput(session = session,
                         'select_attr',
                         choices = names(annotate_layer_args[[input$anntn_type]]),
@@ -111,63 +110,67 @@ mod_dyn_annotations_server <- function(id, rv, annotations){
     })
     
     observe({
-      annotations_list <- annotations()
+      annotations_list <- rv$annotations
       
-      if (!is.null(input$anntn_type)) {
-        if (input$anntn_type == "Text") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
-                                                 x = input$x, 
-                                                 y = input$y, 
-                                                 text = input$text,
+      if (!is.null(annotations_list[[current_id]]$type)) {
+        req(input$x, input$y)
+        if (annotations_list[[current_id]]$type == "Text") {
+          annotations_list[[current_id]] <- list(type  = input$anntn_type,
+                                                 x     = input$x, 
+                                                 y     = input$y, 
+                                                 text  = input$text,
                                                  parse = input$parse,
                                                  color = input$color,
-                                                 size = input$size,
+                                                 size  = input$size,
                                                  alpha = input$alpha)
           
         } else if (input$anntn_type == "Horizontal Line") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
+          req(input$yintercept)
+          annotations_list[[current_id]] <- list(type       = input$anntn_type,
                                                  yintercept = input$yintercept,
-                                                 linetype = input$linetype,
-                                                 color = input$color,
-                                                 size = input$size)
+                                                 linetype   = input$linetype,
+                                                 color      = input$color,
+                                                 size       = input$size)
           
         } else if (input$anntn_type == "Vertical Line") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
-                                                 yintercept = input$xintercept,
-                                                 linetype = input$linetype,
-                                                 color = input$color,
-                                                 size = input$size)
+          req(input$xintercept)
+          annotations_list[[current_id]] <- list(type       = input$anntn_type,
+                                                 xintercept = input$xintercept,
+                                                 linetype   = input$linetype,
+                                                 color      = input$color,
+                                                 size       = input$size)
           
         } else if (input$anntn_type == "Rectangle") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
-                                                 xmin = input$xmin,
-                                                 xmax = input$xmax,
-                                                 ymin = input$ymin,
-                                                 ymax = input$ymax,
+          req(input$xmin, input$xmax, input$ymin, input$ymax)
+          annotations_list[[current_id]] <- list(type  = input$anntn_type,
+                                                 xmin  = input$xmin,
+                                                 xmax  = input$xmax,
+                                                 ymin  = input$ymin,
+                                                 ymax  = input$ymax,
                                                  alpha = input$alpha,
                                                  color = input$color,
-                                                 fill = input$fill)
+                                                 fill  = input$fill)
           
         } else if (input$anntn_type == "Segment") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
-                                                 x = input$x,
-                                                 y = input$y,
-                                                 xend = input$yend,
-                                                 yend = input$yend,
-                                                 color = input$color,
-                                                 size = input$size,
+          annotations_list[[current_id]] <- list(type     = input$anntn_type,
+                                                 x        = input$x,
+                                                 y        = input$y,
+                                                 xend     = input$yend,
+                                                 yend     = input$yend,
+                                                 color    = input$color,
+                                                 size     = input$size,
                                                  linetype = input$linetype)
           
         } else if (input$anntn_type == "Point Range") {
-          annotations_list[[current_id]] <- list(type = input$anntn_type,
-                                                 x = input$x,
-                                                 y = input$y,
-                                                 ymin = input$ymin,
-                                                 ymax = input$ymax,
-                                                 color = input$color,
-                                                 size = input$size,
+          annotations_list[[current_id]] <- list(type      = input$anntn_type,
+                                                 x         = input$x,
+                                                 y         = input$y,
+                                                 ymin      = input$ymin,
+                                                 ymax      = input$ymax,
+                                                 color     = input$color,
+                                                 size      = input$size,
                                                  linewidth = input$linewidth,
-                                                 alpha = input$alpha)
+                                                 alpha     = input$alpha)
           
         }
       } else {
@@ -176,7 +179,7 @@ mod_dyn_annotations_server <- function(id, rv, annotations){
       
       annotations_list[[current_id]] <- 
         annotations_list[[current_id]][!(sapply(annotations_list[[current_id]], is.null))]
-      annotations(annotations_list)
+      rv$annotations <- annotations_list
     })
   })
 }
