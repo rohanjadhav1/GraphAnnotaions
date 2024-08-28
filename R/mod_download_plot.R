@@ -14,7 +14,9 @@ mod_download_plot_ui <- function(id){
     
 #' download_plot Server Functions
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom plotly as_widget
+#' @importFrom plotly renderPlotly plotlyOutput ggplotly
+#' @importFrom glue glue
+#' @importFrom shiny downloadButton reactive downloadHandler wellPanel
 #' @noRd 
 mod_download_plot_server <- function(id, rv){
   moduleServer( id, function(input, output, session){
@@ -22,24 +24,28 @@ mod_download_plot_server <- function(id, rv){
     
     output$download_plot <- renderUI({
       fluidPage(
-        actionButton(ns("down_img"), "Download Image",
-                        icon = icon('download')),
+        # Download plot
+        br(),
+        downloadButton(outputId = ns('download_plot_img'),
+                       label    = "Download Image",
+                       icon     = icon('camera')),
         
         downloadButton(ns("down_plot"), "Download Plotly", 
                        icon = icon('download')),
-        
-        plotlyOutput(ns("download_plot_object"))
+        br(),
+        wellPanel(
+          plotlyOutput(ns("download_plot_object"))
+        )
       )
     })
     
     plot <- reactive({
       if (length(rv$annotations) > 0) {
-        plot <- switch (rv$plot_type,
-                        '1' = rv$scatter_plot,
-                        '2' = rv$bar_chart,
-                        '3' = rv$box_plot,
-                        NULL
-        )
+        plot <- switch(rv$plot_type,
+                       'scatter_plot' = rv$scatter_plot,
+                       'bar_chart'    = rv$bar_chart,
+                       'box_plot'     = rv$box_plot,
+                       NULL)
       } else {
         plot <- rv$plot
       }
@@ -51,69 +57,28 @@ mod_download_plot_server <- function(id, rv){
       plot()
     })
     
-    observeEvent(input$down_img, {
-      showModal(
-        modalDialog(
-          title = "Download Plots",
-          shiny::fluidRow(
-            column(4,
-                   shiny::selectInput(
-                     inputId  = ns('down_img_type'),
-                     choices  = c('png', 'tiff', 'svg', 'pdf', 'tex', 'ps'),
-                     selected = 'png',
-                     label    = "Format"
-                   )),
-            column(4,
-                   shiny::numericInput(
-                     inputId = ns('down_img_width'),
-                     label   = "Width (cm)",
-                     min     = 1,
-                     value   = 16
-                   )),
-            column(4,
-                   shiny::numericInput(
-                     inputId = ns('down_img_height'),
-                     label   = "Height (cm)",
-                     min     = 1,
-                     value   = 9
-                   ))
-          ),
-          
-          # Download plot
-          downloadButton(
-            outputId = ns('download_plot_img'),
-            label    = "Download Image",
-            icon     = icon('camera')
-          )
-        )
-      )
-    })
-    
     # Download plot
     output$download_plot_img <- downloadHandler(
       filename = function(){
-        glue::glue("plot.{input$down_img_type}")
+        glue::glue("{rv$plot_type}_{Sys.Date()}.png")
       },
-      content = function(con) {
+      content = function(file) {
         ggplot2::ggsave(
-          filename = con,
+          filename = file,
           plot     = plot(),
-          device   = input$down_img_type,
-          width    = input$down_img_width,
-          height   = input$down_img_height,
-          units    = "cm",
-          dpi      = 200,
-          limitsize = TRUE
+          width    = 20,
+          height   = 15,
+          dpi      = 200
         )
       }
     )
     
     output$down_plot <- downloadHandler(
       filename = function() {
-        paste("plot-", Sys.Date(), ".html", sep = "")
+        glue::glue("{rv$plot_type}_{Sys.Date()}.html")
       },
       content = function(file) {
-        htmlwidgets::saveWidget(widget = plot(), 
+        htmlwidgets::saveWidget(widget = ggplotly(plot()), 
                                 file = file)
       }
     )
